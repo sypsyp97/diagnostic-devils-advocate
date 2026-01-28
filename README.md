@@ -1,6 +1,6 @@
 ---
 title: Diagnostic Devil's Advocate
-emoji: "\U0001FA7A"
+emoji: "🩺"
 colorFrom: red
 colorTo: blue
 sdk: gradio
@@ -48,7 +48,7 @@ Doctors are not wrong because they lack knowledge -- they are wrong because the 
 Four agents, each with a distinct adversarial role, orchestrated by [LangGraph](https://langchain-ai.github.io/langgraph/) as a linear `StateGraph`:
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/sypsyp97/diagnostic-devils-advocate/main/assets/workflow.jpg" alt="Workflow Diagram" width="100%">
+<img src="assets/workflow.jpg" alt="Workflow Diagram" width="100%">
 </div>
 
 ### Key Design Choices
