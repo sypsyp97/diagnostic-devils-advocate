@@ -56,6 +56,7 @@ Four agents, each with a distinct adversarial role, orchestrated by [LangGraph](
 - **Blinded first agent** -- the Diagnostician never sees the doctor's diagnosis, preventing the AI from anchoring on the same conclusion
 - **Dual-source analysis** -- every agent considers both the medical image and clinical context (vitals, labs, risk factors), because many dangerous conditions have subtle imaging but obvious clinical red flags
 - **MedSigLIP verification** -- zero-shot image classification grounds the bias analysis in visual evidence, not just language reasoning
+- **MedASR voice input** -- [MedASR](https://huggingface.co/google/medasr) enables hands-free clinical context entry via speech-to-text, designed for busy clinical workflows where typing is impractical
 - **Collegial tone** -- the Consultant writes as a consulting colleague (*"Have you considered..."*), not a critic
 
 ---
@@ -184,6 +185,6 @@ diagnostic-devils-advocate/
 
 <div align="center">
 
-Built with [Google Health AI Developer Foundations](https://developers.google.com/health-ai) for the [MedGemma Impact Challenge](https://www.kaggle.com/competitions/med-gemma-impact-challenge)
+Built with [Google Health AI Developer Foundations](https://developers.google.com/health-ai-developer-foundations) for the [MedGemma Impact Challenge](https://www.kaggle.com/competitions/med-gemma-impact-challenge)
 
 </div>
