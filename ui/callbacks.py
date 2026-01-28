@@ -9,6 +9,22 @@ from PIL import Image
 from agents.graph import stream_pipeline
 from config import DEMO_CASES_DIR, ENABLE_MEDASR
 
+# ZeroGPU support: use @spaces.GPU when running on HF Spaces, no-op locally
+try:
+    import spaces
+    SPACES_AVAILABLE = True
+except ImportError:
+    SPACES_AVAILABLE = False
+
+
+def gpu_decorator(duration: int = 180):
+    """Decorator that uses @spaces.GPU on HF Spaces, no-op locally."""
+    def decorator(fn):
+        if SPACES_AVAILABLE:
+            return spaces.GPU(duration=duration)(fn)
+        return fn
+    return decorator
+
 logger = logging.getLogger(__name__)
 
 # Agent display info
@@ -88,10 +104,12 @@ DEMO_CASES = {
 }
 
 
+@gpu_decorator(duration=180)
 def analyze_streaming(image: Image.Image | None, diagnosis: str, context: str, modality: str):
     """
     Generator: run pipeline and yield single HTML output after each agent step.
     Each agent's output appears inline below its progress header.
+    Uses @spaces.GPU on HF Spaces for ZeroGPU support.
     """
     if image is None:
         yield '<div class="pipeline-error">Please upload a medical image.</div>'
@@ -371,12 +389,14 @@ def _format_consultant(state: dict) -> str:
     return "".join(parts)
 
 
+@gpu_decorator(duration=60)
 def transcribe_audio(audio, existing_context: str = ""):
     """
     Transcribe audio input using MedASR.
 
     Generator that yields (context_text, status_html) for streaming UI feedback.
     Appends transcribed text to any existing context.
+    Uses @spaces.GPU on HF Spaces for ZeroGPU support.
     """
     def _status_html(cls: str, text: str) -> str:
         return f'<div class="voice-status {cls}">{text}</div>'
