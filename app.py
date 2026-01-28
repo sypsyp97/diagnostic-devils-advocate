@@ -34,6 +34,7 @@ def main():
         server_port=7860,
         css=CUSTOM_CSS,
         theme=gr.themes.Soft(),
+        ssr_mode=False,  # Disable SSR for consistent CSS loading
     )
 
 
