@@ -22,11 +22,12 @@ tags:
 
 **AI-Powered Cognitive Debiasing for Medical Image Interpretation**
 
-[![MedGemma](https://img.shields.io/badge/MedGemma_1.5-4B_|_27B-4285F4?style=flat-square&logo=google&logoColor=white)](https://huggingface.co/google/medgemma-1.5-4b-it)
-[![MedSigLIP](https://img.shields.io/badge/MedSigLIP-448-34A853?style=flat-square&logo=google&logoColor=white)](https://huggingface.co/google/medsiglip-448)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Agents-1C3C3C?style=flat-square)](https://langchain-ai.github.io/langgraph/)
-[![Gradio](https://img.shields.io/badge/Gradio-UI-F97316?style=flat-square)](https://gradio.app)
-[![License](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey?style=flat-square)](LICENSE)
+[![Hugging Face Space](https://img.shields.io/badge/🤗%20Hugging%20Face-Space-FFD21E?style=for-the-badge)](https://huggingface.co/spaces/yipengsun/diagnostic-devils-advocate)
+[![MedGemma](https://img.shields.io/badge/MedGemma_1.5-4B_|_27B-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://huggingface.co/google/medgemma-1.5-4b-it)
+[![MedSigLIP](https://img.shields.io/badge/MedSigLIP-448-34A853?style=for-the-badge&logo=google&logoColor=white)](https://huggingface.co/google/medsiglip-448)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Agents-1C3C3C?style=for-the-badge)](https://langchain-ai.github.io/langgraph/)
+[![Gradio](https://img.shields.io/badge/Gradio-UI-F97316?style=for-the-badge)](https://gradio.app)
+[![License](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey?style=for-the-badge)](LICENSE)
 
 </div>
 
