@@ -22,7 +22,11 @@ _load_lock = threading.Lock()
 def _token_arg() -> dict:
     if os.path.isdir(MEDASR_MODEL_ID):
         return {}
-    return {"token": HF_TOKEN}
+    # Only pass `token` when explicitly provided; omitting it lets HF Hub fall back
+    # to `huggingface-cli login` cached credentials (useful on local/dev machines).
+    if HF_TOKEN:
+        return {"token": HF_TOKEN}
+    return {}
 
 
 def load():

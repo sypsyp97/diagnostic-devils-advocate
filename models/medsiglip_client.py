@@ -23,7 +23,50 @@ _load_lock = threading.Lock()
 def _token_arg() -> dict:
     if os.path.isdir(MEDSIGLIP_MODEL_ID):
         return {}
-    return {"token": HF_TOKEN}
+    # Only pass `token` when explicitly provided; omitting it lets HF Hub fall back
+    # to `huggingface-cli login` cached credentials (useful on local/dev machines).
+    if HF_TOKEN:
+        return {"token": HF_TOKEN}
+    return {}
+
+
+def _load_tokenizer():
+    """Load a SigLIP-compatible tokenizer with robust fallbacks.
+
+    Some Transformers builds can end up with `AutoTokenizer` resolving the SigLIP
+    tokenizer mapping to `None` (e.g., optional deps missing), which can surface
+    as `'NoneType' object has no attribute 'replace'`. When that happens, we
+    bypass `AutoTokenizer` and load the SigLIP tokenizer class directly.
+    """
+    errors: list[str] = []
+
+    try:
+        from transformers import AutoTokenizer
+        return AutoTokenizer.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+    except Exception as e:  # noqa: BLE001 - intentional broad fallback for env-specific HF/Transformers issues
+        errors.append(f"AutoTokenizer: {e}")
+
+    # Prefer a fast tokenizer (no SentencePiece runtime dependency) when available.
+    try:
+        from transformers import SiglipTokenizerFast
+        return SiglipTokenizerFast.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+    except Exception as e:  # noqa: BLE001
+        errors.append(f"SiglipTokenizerFast: {e}")
+
+    try:
+        from transformers import SiglipTokenizer
+        return SiglipTokenizer.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+    except Exception as e:  # noqa: BLE001
+        errors.append(f"SiglipTokenizer: {e}")
+
+    # Last resort: load as a generic fast tokenizer (uses tokenizer.json).
+    try:
+        from transformers import PreTrainedTokenizerFast
+        return PreTrainedTokenizerFast.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+    except Exception as e:  # noqa: BLE001
+        errors.append(f"PreTrainedTokenizerFast: {e}")
+
+    raise RuntimeError("Failed to load MedSigLIP tokenizer. " + " | ".join(errors))
 
 
 def load():
@@ -37,7 +80,7 @@ def load():
             return _model, _processor
 
         import torch
-        from transformers import AutoModel, AutoImageProcessor, AutoTokenizer, SiglipProcessor
+        from transformers import AutoModel, AutoImageProcessor, SiglipProcessor
 
         logger.info("Loading MedSigLIP from %s...", "local" if os.path.isdir(MEDSIGLIP_MODEL_ID) else "HF Hub")
 
@@ -46,10 +89,14 @@ def load():
             from transformers import AutoProcessor
             _processor = AutoProcessor.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
         except Exception as e:
-            logger.warning("AutoProcessor failed (%s), loading components separately", e)
-            image_processor = AutoImageProcessor.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
-            tokenizer = AutoTokenizer.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
-            _processor = SiglipProcessor(image_processor=image_processor, tokenizer=tokenizer)
+            logger.warning("AutoProcessor failed (%s); trying SiglipProcessor", e)
+            try:
+                _processor = SiglipProcessor.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+            except Exception as e2:
+                logger.warning("SiglipProcessor failed (%s); loading components separately", e2)
+                image_processor = AutoImageProcessor.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+                tokenizer = _load_tokenizer()
+                _processor = SiglipProcessor(image_processor=image_processor, tokenizer=tokenizer)
 
         _model = AutoModel.from_pretrained(
             MEDSIGLIP_MODEL_ID, **_token_arg(), torch_dtype=torch.float32,

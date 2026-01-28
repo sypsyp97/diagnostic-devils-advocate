@@ -36,7 +36,11 @@ def _token_arg(model_id: str) -> dict:
     """Return token kwarg only when loading from HF Hub (not local path)."""
     if _is_local_path(model_id):
         return {}
-    return {"token": HF_TOKEN}
+    # Only pass `token` when explicitly provided; omitting it lets HF Hub fall back
+    # to `huggingface-cli login` cached credentials (useful on local/dev machines).
+    if HF_TOKEN:
+        return {"token": HF_TOKEN}
+    return {}
 
 
 def _get_quantization_config():
