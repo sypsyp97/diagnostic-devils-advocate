@@ -47,12 +47,9 @@ Doctors are not wrong because they lack knowledge -- they are wrong because the 
 
 Four agents, each with a distinct adversarial role, orchestrated by [LangGraph](https://langchain-ai.github.io/langgraph/) as a linear `StateGraph`:
 
-**Gradio UI** (image upload, diagnosis input, clinical context, [MedASR](https://huggingface.co/google/medasr) voice input)
-→ **Diagnostician** — receives image + clinical context but **NOT** the doctor's diagnosis; tags findings by source (`imaging` / `clinical` / `both`)
-→ **Bias Detector** — receives the doctor's diagnosis, compares it against independent findings using image, clinical data, and [MedSigLIP](https://huggingface.co/google/medsiglip-448) sign verification
-→ **Devil's Advocate** — challenges the working diagnosis using both imaging and clinical evidence for must-not-miss alternatives
-→ **Consultant** — synthesizes a collegial consultation note
-→ **Output** (consultation report, alternative diagnoses, recommended workup)
+<div align="center">
+<img src="https://raw.githubusercontent.com/sypsyp97/diagnostic-devils-advocate/main/assets/workflow.jpg" alt="Workflow Diagram" width="100%">
+</div>
 
 ### Key Design Choices
 
