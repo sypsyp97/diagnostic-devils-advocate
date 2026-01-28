@@ -126,7 +126,7 @@ diagnostic-devils-advocate/
 
 ## Disclaimer
 
-> **This is a research prototype built for the [MedGemma Impact Challenge](https://www.kaggle.com/competitions/medgemma-impact-challenge). It is NOT intended for clinical decision-making.** All demo cases are educational composites. Medical images are sourced from the University of Saskatchewan Teaching Collection (CC-BY-NC-SA 4.0).
+> **This is a research prototype built for the [MedGemma Impact Challenge](https://www.kaggle.com/competitions/med-gemma-impact-challenge). It is NOT intended for clinical decision-making.** All demo cases are educational composites. Medical images are sourced from the University of Saskatchewan Teaching Collection (CC-BY-NC-SA 4.0).
 
 ---
 
@@ -166,6 +166,6 @@ diagnostic-devils-advocate/
 
 <div align="center">
 
-Built with [Google Health AI Developer Foundations](https://developers.google.com/health-ai) for the [MedGemma Impact Challenge](https://www.kaggle.com/competitions/medgemma-impact-challenge)
+Built with [Google Health AI Developer Foundations](https://developers.google.com/health-ai) for the [MedGemma Impact Challenge](https://www.kaggle.com/competitions/med-gemma-impact-challenge)
 
 </div>
