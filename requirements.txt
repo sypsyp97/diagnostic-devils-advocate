@@ -2,6 +2,7 @@ torch>=2.1.0
 transformers>=4.50.0
 accelerate>=0.26.0
 bitsandbytes>=0.42.0
+huggingface_hub>=0.20.0
 langgraph>=0.2.0
 gradio>=6.4.0
 Pillow>=10.0.0
