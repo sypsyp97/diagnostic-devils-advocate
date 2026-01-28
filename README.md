@@ -57,6 +57,7 @@ Four agents, each with a distinct adversarial role, orchestrated by [LangGraph](
 - **Dual-source analysis** -- every agent considers both the medical image and clinical context (vitals, labs, risk factors), because many dangerous conditions have subtle imaging but obvious clinical red flags
 - **MedSigLIP verification** -- zero-shot image classification grounds the bias analysis in visual evidence, not just language reasoning
 - **MedASR voice input** -- [MedASR](https://huggingface.co/google/medasr) enables hands-free clinical context entry via speech-to-text, designed for busy clinical workflows where typing is impractical
+- **Prompt repetition** -- implements the [prompt repetition technique](https://arxiv.org/abs/2512.14982) from Google Research to improve output quality and consistency in non-reasoning LLMs
 - **Collegial tone** -- the Consultant writes as a consulting colleague (*"Have you considered..."*), not a critic
 
 ---
