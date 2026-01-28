@@ -31,6 +31,10 @@ Four agents, each with a distinct adversarial role, orchestrated by [LangGraph](
 
 <div align="center">
 <img src="assets/workflow.jpg" alt="Workflow Diagram" width="100%">
+<br>
+<em>Figure 1: Multi-agent pipeline for cognitive debiasing in medical image interpretation.</em>
+<br>
+<sub>Diagram generated with <a href="https://gemini.google/overview/image-generation/">Nano Banana Pro</a></sub>
 </div>
 
 ### Key Design Choices
