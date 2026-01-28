@@ -37,12 +37,22 @@ def load():
             return _model, _processor
 
         import torch
-        from transformers import AutoModel, AutoProcessor
+        from transformers import AutoModel, AutoImageProcessor, AutoTokenizer, SiglipProcessor
 
         logger.info("Loading MedSigLIP from %s...", "local" if os.path.isdir(MEDSIGLIP_MODEL_ID) else "HF Hub")
-        _processor = AutoProcessor.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+
+        # MedSigLIP may lack processor_config.json, so load components separately
+        try:
+            from transformers import AutoProcessor
+            _processor = AutoProcessor.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+        except Exception as e:
+            logger.warning("AutoProcessor failed (%s), loading components separately", e)
+            image_processor = AutoImageProcessor.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+            tokenizer = AutoTokenizer.from_pretrained(MEDSIGLIP_MODEL_ID, **_token_arg())
+            _processor = SiglipProcessor(image_processor=image_processor, tokenizer=tokenizer)
+
         _model = AutoModel.from_pretrained(
-            MEDSIGLIP_MODEL_ID, **_token_arg(), dtype=torch.float32,
+            MEDSIGLIP_MODEL_ID, **_token_arg(), torch_dtype=torch.float32,
         ).to(DEVICE)
         _model.eval()
         logger.info("MedSigLIP loaded.")
