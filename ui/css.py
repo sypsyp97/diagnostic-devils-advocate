@@ -723,4 +723,244 @@ div.agent-block .agent-header {
     .hero-banner h1 { font-size: 1.5rem; }
     .case-cards-overlay { grid-template-columns: 1fr; }
 }
+
+/* ===== Dark Mode ===== */
+.dark .section-label {
+    color: #94a3b8;
+}
+
+/* Case Cards */
+.dark .case-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+.dark .case-card:hover {
+    border-color: #60a5fa;
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.2);
+}
+.dark .case-title {
+    color: #f1f5f9;
+}
+.dark .case-meta {
+    color: #94a3b8;
+}
+.dark .case-desc {
+    color: #64748b;
+}
+.dark .case-misdiag {
+    border-top-color: #334155;
+}
+.dark .misdiag-label {
+    color: #64748b;
+}
+.dark .misdiag-value {
+    color: #f87171;
+}
+
+/* Tags in dark mode */
+.dark .tag-blue   { background: #1e3a5f; color: #60a5fa; }
+.dark .tag-red    { background: #450a0a; color: #fca5a5; }
+.dark .tag-purple { background: #2e1065; color: #c4b5fd; }
+
+/* Voice Section */
+.dark .voice-section {
+    background: linear-gradient(135deg, #1e293b 0%, #1e3a5f 100%);
+    border-color: #334155;
+}
+.dark .voice-title {
+    color: #f1f5f9;
+}
+.dark .voice-badge {
+    background: #1e3a5f;
+    color: #60a5fa;
+}
+.dark .voice-hint {
+    color: #64748b;
+}
+.dark .transcribe-btn {
+    background: #1e3a5f !important;
+    border-color: #3b82f6 !important;
+    color: #60a5fa !important;
+}
+.dark .transcribe-btn:hover {
+    background: #1d4ed8 !important;
+    color: #fff !important;
+}
+
+/* Voice status indicators */
+.dark .voice-idle {
+    background: #1e293b;
+    color: #64748b;
+    border-color: #334155;
+}
+.dark .voice-processing {
+    background: #1e3a5f;
+    color: #60a5fa;
+    border-color: #3b82f6;
+}
+.dark .voice-success {
+    background: #14532d;
+    color: #4ade80;
+    border-color: #22c55e;
+}
+.dark .voice-error {
+    background: #450a0a;
+    color: #fca5a5;
+    border-color: #ef4444;
+}
+
+/* Progress Bar */
+.dark .progress-bar-track {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+/* Agent Blocks */
+.dark .step-done {
+    background: #14532d;
+    border-color: #22c55e;
+}
+.dark .step-done .step-name { color: #4ade80; }
+.dark .step-done .step-status { color: #22c55e; }
+
+.dark .step-active {
+    background: #1e3a5f;
+    border-color: #3b82f6;
+}
+.dark .step-active .step-name { color: #60a5fa; }
+.dark .step-active .step-status { color: #3b82f6; }
+
+.dark .step-waiting {
+    background: #1e293b;
+    border-color: #334155;
+}
+.dark .step-waiting .step-icon {
+    background: #334155;
+    color: #64748b;
+}
+.dark .step-waiting .step-name { color: #64748b; }
+.dark .step-waiting .step-status { color: #475569; }
+
+.dark .step-error {
+    background: #450a0a;
+    border-color: #ef4444;
+}
+.dark .step-error .step-name { color: #fca5a5; }
+.dark .step-error .step-status { color: #ef4444; }
+
+/* Agent Output */
+.dark .agent-output {
+    color: #cbd5e1;
+    border-top-color: rgba(255,255,255,0.08);
+}
+.dark .agent-output details summary {
+    color: #94a3b8;
+}
+.dark .findings-section strong,
+.dark .differentials-section strong {
+    color: #f1f5f9;
+}
+
+/* Bias Detector */
+.dark .discrepancy-summary {
+    background: #431407;
+    border-color: #c2410c;
+    color: #fed7aa;
+}
+.dark .bias-item {
+    background: #422006;
+    border-left-color: #f59e0b;
+}
+.dark .bias-title {
+    color: #fcd34d;
+}
+.dark .bias-evidence {
+    color: #a8a29e;
+}
+.dark .missed-findings {
+    background: #450a0a;
+}
+.dark .missed-findings strong {
+    color: #fca5a5;
+}
+
+/* Severity tags */
+.dark .severity-high { background: #450a0a; color: #fca5a5; }
+.dark .severity-medium { background: #431407; color: #fdba74; }
+.dark .severity-low { background: #422006; color: #fde047; }
+
+/* Source tags */
+.dark .source-doctor { background: #1e3a5f; color: #60a5fa; }
+.dark .source-ai { background: #2e1065; color: #c4b5fd; }
+.dark .source-both { background: #312e81; color: #a5b4fc; }
+.dark .source-imaging { background: #1e3a5f; color: #60a5fa; }
+.dark .source-clinical { background: #422006; color: #fcd34d; }
+
+/* SigLIP */
+.dark .siglip-section {
+    background: #0c4a6e;
+}
+.dark .siglip-section strong {
+    color: #7dd3fc;
+}
+.dark .sign-present {
+    color: #4ade80;
+}
+.dark .sign-absent {
+    color: #64748b;
+}
+
+/* Devil's Advocate */
+.dark .mnm-item {
+    background: #450a0a;
+    border-left-color: #ef4444;
+}
+.dark .mnm-title {
+    color: #fca5a5;
+}
+.dark .challenge-item {
+    background: #2e1065;
+    border-left-color: #8b5cf6;
+}
+.dark .challenge-claim {
+    color: #c4b5fd;
+}
+.dark .challenge-counter {
+    color: #9ca3af;
+}
+
+/* Consultant */
+.dark .consultation-note {
+    background: linear-gradient(135deg, #1e293b, #0c4a6e);
+    border-color: #334155;
+    color: #e2e8f0;
+}
+.dark .urgency-critical { background: #450a0a; color: #fca5a5; }
+.dark .urgency-high { background: #431407; color: #fdba74; }
+.dark .urgency-moderate { background: #422006; color: #fde047; }
+.dark .urgency-unknown { background: #334155; color: #94a3b8; }
+.dark .confidence-note {
+    background: #1e293b;
+    color: #94a3b8;
+}
+
+/* Pipeline error */
+.dark .pipeline-error {
+    background: #450a0a;
+    border-color: #ef4444;
+    color: #fca5a5;
+}
+
+/* Footer */
+.dark .footer-text {
+    color: #64748b;
+    border-top-color: #334155;
+}
+.dark .footer-chip {
+    background: #334155;
+    color: #94a3b8;
+}
+.dark .footer-sep {
+    color: #475569;
+}
 """
