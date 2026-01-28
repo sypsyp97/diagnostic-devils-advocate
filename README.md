@@ -18,228 +18,169 @@ tags:
 
 <div align="center">
 
-# 🩺 Diagnostic Devil's Advocate
+# Diagnostic Devil's Advocate
 
-### AI-Powered Cognitive Debiasing for Clinical Diagnosis
+**AI-Powered Cognitive Debiasing for Medical Image Interpretation**
 
-**A multi-agent system that challenges medical diagnoses to catch what doctors might miss.**
-
-[![MedGemma](https://img.shields.io/badge/MedGemma-4B%20%7C%2027B-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://huggingface.co/google/medgemma-1.5-4b-it)
-[![MedSigLIP](https://img.shields.io/badge/MedSigLIP-448-34A853?style=for-the-badge&logo=google&logoColor=white)](https://huggingface.co/google/medsiglip-448)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Agent%20Pipeline-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
-[![Gradio](https://img.shields.io/badge/Gradio-UI-F97316?style=for-the-badge&logo=gradio&logoColor=white)](https://gradio.app)
-
-[Live Demo](#getting-started) &bull; [Architecture](#architecture) &bull; [Demo Cases](#demo-cases) &bull; [Technical Details](#technical-details)
-
----
+[![MedGemma](https://img.shields.io/badge/MedGemma_1.5-4B_|_27B-4285F4?style=flat-square&logo=google&logoColor=white)](https://huggingface.co/google/medgemma-1.5-4b-it)
+[![MedSigLIP](https://img.shields.io/badge/MedSigLIP-448-34A853?style=flat-square&logo=google&logoColor=white)](https://huggingface.co/google/medsiglip-448)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Agents-1C3C3C?style=flat-square)](https://langchain-ai.github.io/langgraph/)
+[![Gradio](https://img.shields.io/badge/Gradio-UI-F97316?style=flat-square)](https://gradio.app)
+[![License](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey?style=flat-square)](LICENSE)
 
 </div>
 
-## The Problem
+---
 
-> *Diagnostic errors affect an estimated **12 million** adults annually in the U.S. alone, with cognitive biases — [anchoring](https://en.wikipedia.org/wiki/Anchoring_(cognitive_bias)), [premature closure](https://en.wikipedia.org/wiki/Premature_closure), [confirmation bias](https://en.wikipedia.org/wiki/Confirmation_bias) — implicated in up to **74%** of cases.* ([Singh et al., BMJ Quality & Safety, 2014](https://qualitysafety.bmj.com/content/23/9/727))
+## Why This Exists
 
-Doctors are not wrong because they lack knowledge. They are wrong because the human brain takes shortcuts — and in medicine, shortcuts kill. A physician who sees "young patient + chest pain after trauma" anchors on **rib contusion** and stops looking. The pneumothorax on the X-ray goes unseen. The patient deteriorates.
+> Diagnostic errors affect an estimated **12 million** adults annually in the U.S., with cognitive biases implicated in up to **74%** of cases. ([Singh et al., 2014](https://pubmed.ncbi.nlm.nih.gov/24742777/))
 
-**Diagnostic Devil's Advocate** is a system that acts as an adversarial second opinion. It does not replace the physician — it challenges them. It asks: *"Have you considered what happens if you're wrong?"*
+Doctors are not wrong because they lack knowledge -- they are wrong because the human brain takes shortcuts. A physician who sees "young patient + chest pain after trauma" anchors on **rib contusion** and stops looking. The pneumothorax goes unseen. The patient deteriorates.
 
-## How It Works
+**Diagnostic Devil's Advocate** acts as an adversarial second opinion. It does not replace the physician -- it challenges them: *"Have you considered what happens if you're wrong?"*
 
-The system runs a **4-agent pipeline** orchestrated by [LangGraph](https://langchain-ai.github.io/langgraph/) where each agent has a distinct adversarial role. Every agent analyzes **both the medical image and the full clinical context** (history, vitals, labs, exam findings) — because some dangerous conditions (aortic dissection, pulmonary embolism) may show subtle or no imaging signs but have obvious clinical red flags. Critically, the first agent does this **without seeing the doctor's diagnosis**, preventing the AI itself from being [anchored](https://en.wikipedia.org/wiki/Anchoring_(cognitive_bias)).
+---
 
-### The Four Agents
+## Pipeline
 
-| Agent | Role | Model | Key Design Choice |
-|:------|:-----|:------|:------------------|
-| **Diagnostician** | Independent image + clinical analysis | [MedGemma 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) (multimodal) | **Blinded** — never sees the doctor's diagnosis. Tags each finding as `imaging`, `clinical`, or `both` to distinguish evidence sources. |
-| **Bias Detector** | Compare doctor vs. AI findings | [MedGemma 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) + [MedSigLIP](https://huggingface.co/google/medsiglip-448) | Uses **zero-shot image classification** to verify radiological signs. Flags clinical red flags ignored by either assessment. |
-| **Devil's Advocate** | Adversarial challenge | [MedGemma 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) | Deliberately contrarian — uses both imaging and clinical evidence to argue for **[must-not-miss diagnoses](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6775443/)** |
-| **Consultant** | Synthesize final report | [MedGemma 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) or [27B Text-IT](https://huggingface.co/google/medgemma-27b-text-it) | Writes as a **collegial consultant**: *"Have you considered..."* not *"You are wrong."* Only this agent optionally upgrades to 27B for deeper reasoning. |
-
-## Architecture
-
-The pipeline is orchestrated by [LangGraph](https://langchain-ai.github.io/langgraph/) as a linear `StateGraph`:
+Four agents, each with a distinct adversarial role, orchestrated by [LangGraph](https://langchain-ai.github.io/langgraph/) as a linear `StateGraph`:
 
 **Gradio UI** (image upload, diagnosis input, clinical context, [MedASR](https://huggingface.co/google/medasr) voice input)
 → **Diagnostician** — receives image + clinical context but **NOT** the doctor's diagnosis; tags findings by source (`imaging` / `clinical` / `both`)
-→ **Bias Detector** — now receives the doctor's diagnosis, compares it against independent findings using image, clinical data, and [MedSigLIP](https://huggingface.co/google/medsiglip-448) sign verification
+→ **Bias Detector** — receives the doctor's diagnosis, compares it against independent findings using image, clinical data, and [MedSigLIP](https://huggingface.co/google/medsiglip-448) sign verification
 → **Devil's Advocate** — challenges the working diagnosis using both imaging and clinical evidence for must-not-miss alternatives
 → **Consultant** — synthesizes a collegial consultation note
 → **Output** (consultation report, alternative diagnoses, recommended workup)
 
-### MedSigLIP Sign Verification
+### Key Design Choices
 
-The Bias Detector doesn't just rely on text reasoning — it uses [**MedSigLIP-448**](https://huggingface.co/google/medsiglip-448) for objective visual verification. For each radiological sign mentioned by the Diagnostician (e.g., "pleural effusion", "cardiomegaly", "pneumothorax"), MedSigLIP performs [zero-shot binary classification](https://huggingface.co/tasks/zero-shot-image-classification): it compares the logits of `"chest radiograph showing [sign]"` vs `"normal chest radiograph with no [sign]"`. A logit difference > 2 is classified as "likely present", grounding the bias analysis in **visual evidence** rather than pure language reasoning.
+- **Blinded first agent** -- the Diagnostician never sees the doctor's diagnosis, preventing the AI from anchoring on the same conclusion
+- **Dual-source analysis** -- every agent considers both the medical image and clinical context (vitals, labs, risk factors), because many dangerous conditions have subtle imaging but obvious clinical red flags
+- **MedSigLIP verification** -- zero-shot image classification grounds the bias analysis in visual evidence, not just language reasoning
+- **Collegial tone** -- the Consultant writes as a consulting colleague (*"Have you considered..."*), not a critic
 
-## Demo Cases
+---
 
-Three composite clinical scenarios covering the most dangerous diagnostic error patterns:
+## Model Stack
 
-<table>
-<tr>
-<td width="33%" valign="top">
+| Model | Params | Role | VRAM |
+|:------|:------:|:-----|:----:|
+| [MedGemma 1.5 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) | 4B | Multimodal image + text analysis | ~4 GB (4-bit) |
+| [MedGemma 27B Text-IT](https://huggingface.co/google/medgemma-27b-text-it) | 27B | Consultant deep reasoning (optional) | ~54 GB |
+| [MedSigLIP-448](https://huggingface.co/google/medsiglip-448) | 0.9B | Zero-shot sign verification | ~3 GB |
+| [MedASR](https://huggingface.co/google/medasr) | 105M | Medical speech-to-text | ~0.5 GB |
 
-### Case 1: Missed Pneumothorax
-**🏷️ TRAUMA**
+The full pipeline requires **~8 GB VRAM** and runs on any 12 GB+ CUDA GPU. All models load locally via [Transformers](https://huggingface.co/docs/transformers) with [4-bit quantization](https://huggingface.co/docs/bitsandbytes) -- **zero API costs, fully offline-capable**.
 
-32M, motorcycle collision. Doctor diagnoses **rib contusion**, discharges patient. Supine CXR actually shows a **left pneumothorax** with rib fractures.
-
-**Bias**: [Satisfaction of search](https://radiopaedia.org/articles/satisfaction-of-search) — found the rib fractures, stopped looking.
-
-</td>
-<td width="33%" valign="top">
-
-### Case 2: Aortic Dissection → "GERD"
-**🏷️ VASCULAR**
-
-58M, hypertensive, tearing chest pain. Doctor diagnoses **acid reflux**, prescribes antacids. Blood pressure asymmetry (178/102 R vs 146/88 L) and D-dimer 4,850 suggest **Stanford type B dissection**.
-
-**Bias**: [Anchoring](https://en.wikipedia.org/wiki/Anchoring_(cognitive_bias)) + [availability heuristic](https://en.wikipedia.org/wiki/Availability_heuristic) — common diagnosis assumed first.
-
-</td>
-<td width="33%" valign="top">
-
-### Case 3: Postpartum PE → "Anxiety"
-**🏷️ POSTPARTUM**
-
-29F, day 5 post C-section, dyspnea and tachycardia. Doctor orders **psychiatric consult**. SpO2 91%, ABG shows respiratory alkalosis — classic **pulmonary embolism**.
-
-**Bias**: [Premature closure](https://en.wikipedia.org/wiki/Premature_closure) + [framing effect](https://en.wikipedia.org/wiki/Framing_effect_(psychology)) — young woman = anxiety.
-
-</td>
-</tr>
-</table>
-
-> All cases are educational composites synthesized from published literature. See [`data/demo_cases/SOURCES.md`](data/demo_cases/SOURCES.md) for full citations.
-
-## Technical Details
-
-### Model Stack
-
-| Model | Parameters | Role | Loading |
-|:------|:----------|:-----|:--------|
-| [MedGemma 1.5 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) | 4B | Multimodal image+text analysis | 4-bit quantized (~4GB VRAM) or BF16 (~8GB) |
-| [MedGemma 27B Text-IT](https://huggingface.co/google/medgemma-27b-text-it) | 27B | Consultant deep reasoning (optional) | BF16 (~54GB VRAM) |
-| [MedSigLIP-448](https://huggingface.co/google/medsiglip-448) | 0.9B | Zero-shot sign verification | FP32 (~3GB VRAM) |
-| [MedASR](https://huggingface.co/google/medasr) | 105M | Medical speech-to-text | FP32 (~0.5GB VRAM) |
-
-### Hardware
-
-The full pipeline (4B 4-bit + MedSigLIP + MedASR) requires **~8 GB VRAM** and runs on any CUDA GPU with 12GB+ memory. All models load locally via [Transformers](https://huggingface.co/docs/transformers) with [4-bit quantization](https://huggingface.co/docs/bitsandbytes) — **zero API costs, fully offline-capable**.
-
-### Key Technical Decisions
-
-- **Blinded Diagnostician**: The first agent never sees the doctor's diagnosis. This prevents the AI from anchoring on the same conclusion, enabling genuine independent analysis.
-
-- **Dual-source analysis (imaging + clinical)**: All agents analyze both the medical image and the full clinical context (vitals, labs, risk factors). Each Diagnostician finding is tagged with its source (`imaging`, `clinical`, or `both`). This is critical because many must-not-miss diagnoses — aortic dissection (BP asymmetry), pulmonary embolism (low SpO2, elevated D-dimer) — may have subtle or absent imaging signs but glaring clinical red flags.
-
-- **Structured JSON output**: All agents output structured JSON parsed by [`json_repair`](https://github.com/mangiucugna/json_repair), which handles LLM output quirks (missing commas, truncation, markdown wrapping).
-
-- **Thinking token stripping**: MedGemma wraps internal reasoning in `<unused94>...<unused95>` tags ([model card](https://huggingface.co/google/medgemma-27b-text-it#thinking-mode)). These are stripped via regex before display.
-
-- **Adaptive model routing**: The first three agents (Diagnostician, Bias Detector, Devil's Advocate) always use 4B-IT for multimodal image+text analysis. Only the Consultant (text-only synthesis) optionally upgrades to 27B when `USE_27B=true` for deeper clinical reasoning. `generate_with_image()` always uses 4B (only model with vision).
-
-- **Collegial tone**: The Consultant is prompted to write as a consulting colleague, not a critic. Research shows physicians respond better to [collaborative challenge than confrontation](https://pubmed.ncbi.nlm.nih.gov/28493811/).
-
-- **Prompt Repetition**: All agents use the prompt repetition technique from [*"Prompt Repetition Improves Non-Reasoning LLMs"*](https://arxiv.org/abs/2512.14982) (Google Research, 2025). The user prompt is repeated with a transition phrase (`<query> Let me repeat the request: <query>`), which won **47 out of 70** benchmark-model combinations with **zero losses** — at nearly zero cost (only increases prefill tokens, no extra generation). Controllable via `ENABLE_PROMPT_REPETITION` env var.
+---
 
 ## Getting Started
 
-### Prerequisites
-
-- Python 3.11+
-- CUDA-capable GPU (12GB+ VRAM)
-- [Hugging Face account](https://huggingface.co) with access to gated models (MedGemma, MedSigLIP, MedASR)
-
-### Installation
-
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/sypsyp97/diagnostic-devils-advocate
 cd diagnostic-devils-advocate
 
-# Install dependencies
+# Install
 pip install -r requirements.txt
 
-# Login to Hugging Face (required for gated models)
+# Login to Hugging Face (gated models)
 huggingface-cli login
-```
 
-### Running
-
-```bash
-# Standard launch (4B quantized, 12GB GPU)
-python app.py
-
-# With 27B reasoning model (A100 80GB required)
-USE_27B=true QUANTIZE_4B=false python app.py
-
-# Disable voice input
-ENABLE_MEDASR=false python app.py
+# Run
+python app.py                                    # 4B quantized (default)
+USE_27B=true QUANTIZE_4B=false python app.py     # with 27B Consultant
+ENABLE_MEDASR=false python app.py                # without voice input
 ```
 
 The app launches at `http://localhost:7860`.
 
-### Environment Variables
+<details>
+<summary><b>Environment Variables</b></summary>
 
 | Variable | Default | Description |
 |:---------|:--------|:------------|
 | `USE_27B` | `false` | Enable 27B model for the Consultant agent |
 | `QUANTIZE_4B` | `true` | 4-bit quantize the 4B model |
 | `ENABLE_MEDASR` | `true` | Enable voice input via MedASR |
-| `HF_TOKEN` | — | Hugging Face token (or use `huggingface-cli login`) |
+| `HF_TOKEN` | -- | Hugging Face token (or use `huggingface-cli login`) |
 | `ENABLE_PROMPT_REPETITION` | `true` | [Prompt repetition](https://arxiv.org/abs/2512.14982) for improved output quality |
-| `MODEL_LOCAL_DIR` | — | Local directory for pre-downloaded models |
+| `MODEL_LOCAL_DIR` | -- | Local directory for pre-downloaded models |
 | `DEVICE` | `cuda` | Compute device |
 
-## Project Structure
+</details>
+
+<details>
+<summary><b>Project Structure</b></summary>
 
 ```
 diagnostic-devils-advocate/
-├── app.py                        # Gradio entry point
-├── config.py                     # Model selection & environment config
+├── app.py                     # Gradio entry point
+├── config.py                  # Model & environment config
 ├── requirements.txt
-│
 ├── agents/
-│   ├── state.py                  # LangGraph TypedDict state definitions
-│   ├── prompts.py                # All agent prompt templates
-│   ├── graph.py                  # LangGraph StateGraph pipeline
-│   ├── output_parser.py          # JSON parsing with json_repair + llm-output-parser
-│   ├── diagnostician.py          # Agent 1: Blinded image + clinical analysis
-│   ├── bias_detector.py          # Agent 2: Bias detection + MedSigLIP
-│   ├── devil_advocate.py         # Agent 3: Adversarial challenge
-│   └── consultant.py              # Agent 4: Consultation note synthesis
-│
+│   ├── prompts.py             # All agent prompt templates
+│   ├── graph.py               # LangGraph StateGraph pipeline
+│   ├── output_parser.py       # JSON parsing (json_repair + llm-output-parser)
+│   ├── diagnostician.py       # Agent 1: Blinded analysis
+│   ├── bias_detector.py       # Agent 2: Bias detection + MedSigLIP
+│   ├── devil_advocate.py      # Agent 3: Adversarial challenge
+│   └── consultant.py          # Agent 4: Consultation synthesis
 ├── models/
-│   ├── medgemma_client.py        # MedGemma 4B/27B inference client
-│   ├── medsiglip_client.py       # MedSigLIP zero-shot classification
-│   ├── medasr_client.py          # MedASR speech-to-text
-│   └── utils.py                  # Image preprocessing, token stripping
-│
+│   ├── medgemma_client.py     # MedGemma 4B/27B inference
+│   ├── medsiglip_client.py    # MedSigLIP zero-shot classification
+│   ├── medasr_client.py       # MedASR speech-to-text
+│   └── utils.py               # Image preprocessing, token stripping
 ├── ui/
-│   ├── components.py             # Gradio layout & progress visualization
-│   ├── callbacks.py              # UI event handlers & pipeline integration
-│   └── css.py                    # Custom styling (responsive design)
-│
+│   ├── components.py          # Gradio layout
+│   ├── callbacks.py           # UI event handlers
+│   └── css.py                 # Custom styling
 └── data/
-    └── demo_cases/               # 3 composite clinical scenarios
-        └── SOURCES.md            # Full literature citations
+    └── demo_cases/            # Composite clinical scenarios
 ```
+
+</details>
+
+---
 
 ## Disclaimer
 
-> **This is a research prototype built for the MedGemma Impact Challenge. It is NOT intended for clinical decision-making.** All demo cases are educational composites. Medical images are sourced from the University of Saskatchewan Teaching Collection (CC-BY-NC-SA 4.0).
+> **This is a research prototype built for the [MedGemma Impact Challenge](https://www.kaggle.com/competitions/medgemma-impact-challenge). It is NOT intended for clinical decision-making.** All demo cases are educational composites. Medical images are sourced from the University of Saskatchewan Teaching Collection (CC-BY-NC-SA 4.0).
+
+---
 
 ## References
 
-- Singh H, et al. "The frequency of diagnostic errors in outpatient care." [*BMJ Quality & Safety*, 2014](https://qualitysafety.bmj.com/content/23/9/727)
-- Graber ML, et al. "Cognitive interventions to reduce diagnostic error." [*BMJ Quality & Safety*, 2012](https://qualitysafety.bmj.com/content/21/7/535)
-- Croskerry P. "The importance of cognitive errors in diagnosis." [*Academic Medicine*, 2003](https://pubmed.ncbi.nlm.nih.gov/12915371/)
-- Ball CG, et al. "Incidence, risk factors, and outcomes for occult pneumothoraces." [*J Trauma*, 2005](https://pubmed.ncbi.nlm.nih.gov/16374282/)
-- Hansen MS, et al. "Frequency of misdiagnosis of acute aortic dissection." [*Am J Cardiol*, 2007](https://pubmed.ncbi.nlm.nih.gov/17350380/)
-- Ivgi M, et al. "Prompt Repetition Improves Non-Reasoning LLMs." [*arXiv:2512.14982*](https://arxiv.org/abs/2512.14982), Google Research, 2025
-- Google Health AI. [Health AI Developer Foundations (HAI-DEF)](https://developers.google.com/health-ai)
-- Yang J, et al. [MedGemma: Medical AI model](https://huggingface.co/collections/google/health-ai-developer-foundations-68544906f8a0a10f7d30ade8) — Hugging Face Collection
+<details>
+<summary><b>Diagnostic Error & Cognitive Bias</b></summary>
+
+- Singh H, Meyer AND, Thomas EJ. "The frequency of diagnostic errors in outpatient care: estimations from three large observational studies involving US adult populations." *BMJ Quality & Safety*, 2014;23(9):727--731. [doi:10.1136/bmjqs-2013-002627](https://pubmed.ncbi.nlm.nih.gov/24742777/)
+- Croskerry P. "The importance of cognitive errors in diagnosis and strategies to minimize them." *Academic Medicine*, 2003;78(8):775--780. [doi:10.1097/00001888-200308000-00003](https://pubmed.ncbi.nlm.nih.gov/12915363/)
+- Vally ZI, Khammissa RAG, Feller G, et al. "Errors in clinical diagnosis: a narrative review." *Journal of International Medical Research*, 2023;51(8):03000605231162798. [doi:10.1177/03000605231162798](https://pubmed.ncbi.nlm.nih.gov/37602466/)
+- Staal J, Hooftman J, Gunput STG, et al. "Effect on diagnostic accuracy of cognitive reasoning tools for the workplace setting: systematic review and meta-analysis." *BMJ Quality & Safety*, 2022;31(12):899--910. [doi:10.1136/bmjqs-2022-014865](https://pubmed.ncbi.nlm.nih.gov/36396150/)
+
+</details>
+
+<details>
+<summary><b>AI-Assisted Debiasing & Multi-Agent Systems</b></summary>
+
+- Brown C, Nazeer R, Gibbs A, et al. "Breaking Bias: The Role of Artificial Intelligence in Improving Clinical Decision-Making." *Cureus*, 2023;15(3):e36415. [doi:10.7759/cureus.36415](https://pubmed.ncbi.nlm.nih.gov/37090406/)
+- Tang X, Zou A, Zhang Z, et al. "MedAgents: Large Language Models as Collaborators for Zero-shot Medical Reasoning." *Findings of ACL*, 2024:599--621. [arXiv:2311.10537](https://arxiv.org/abs/2311.10537)
+- Kim Y, Park C, Jeong H, et al. "MDAgents: An Adaptive Collaboration of LLMs for Medical Decision-Making." *NeurIPS*, 2024. [arXiv:2404.15155](https://arxiv.org/abs/2404.15155)
+- Chen X, Yi H, You M, et al. "Enhancing diagnostic capability with multi-agents conversational large language models." *npj Digital Medicine*, 2025;8:159. [doi:10.1038/s41746-025-01550-0](https://pubmed.ncbi.nlm.nih.gov/40082662/)
+
+</details>
+
+<details>
+<summary><b>Medical Vision-Language Models & Prompt Engineering</b></summary>
+
+- Jang J, Kyung D, Kim SH, et al. "Significantly improving zero-shot X-ray pathology classification via fine-tuning pre-trained image-text encoders." *Scientific Reports*, 2024;14:23199. [doi:10.1038/s41598-024-73695-z](https://pubmed.ncbi.nlm.nih.gov/39369048/)
+- Leviathan Y, Kalman M, Matias Y. "Prompt Repetition Improves Non-Reasoning LLMs." [arXiv:2512.14982](https://arxiv.org/abs/2512.14982), Google Research, 2025.
+- Zaghir J, Naguib M, Bjelogrlic M, et al. "Prompt Engineering Paradigms for Medical Applications: Scoping Review." *Journal of Medical Internet Research*, 2024;26:e60501. [doi:10.2196/60501](https://pubmed.ncbi.nlm.nih.gov/39255030/)
+- Sellergren A, Kazemzadeh S, Jaroensri T, et al. "MedGemma Technical Report." [arXiv:2507.05201](https://arxiv.org/abs/2507.05201), Google, 2025.
+
+</details>
 
 ---
 
