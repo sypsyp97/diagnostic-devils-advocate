@@ -26,7 +26,7 @@ def build_ui(analyze_fn, load_demo_fn, transcribe_fn=None):
                    Four AI agents will independently analyze it, detect cognitive biases,
                    challenge the diagnosis, and synthesize a debiasing report.</p>
                 <div class="hero-models">
-                    <span class="model-chip">MedGemma 4B</span>
+                    <span class="model-chip">MedGemma 1.5</span>
                     <span class="model-chip">MedSigLIP</span>
                     <span class="model-chip">LangGraph</span>
                     <span class="model-chip">MedASR</span>
