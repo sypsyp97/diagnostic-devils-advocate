@@ -7,7 +7,7 @@ sdk: gradio
 sdk_version: "5.12.0"
 app_file: app.py
 pinned: false
-license: apache-2.0
+license: cc-by-4.0
 tags:
   - medgemma
   - medical-imaging
@@ -52,9 +52,9 @@ The system runs a **4-agent pipeline** orchestrated by [LangGraph](https://langc
 | Agent | Role | Model | Key Design Choice |
 |:------|:-----|:------|:------------------|
 | **Diagnostician** | Independent image + clinical analysis | [MedGemma 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) (multimodal) | **Blinded** — never sees the doctor's diagnosis. Tags each finding as `imaging`, `clinical`, or `both` to distinguish evidence sources. |
-| **Bias Detector** | Compare doctor vs. AI findings | [MedGemma](https://huggingface.co/google/medgemma-1.5-4b-it) 4B/27B + [MedSigLIP](https://huggingface.co/google/medsiglip-448) | Uses **zero-shot image classification** to verify radiological signs. Flags clinical red flags ignored by either assessment. |
-| **Devil's Advocate** | Adversarial challenge | [MedGemma](https://huggingface.co/google/medgemma-27b-text-it) 4B/27B | Deliberately contrarian — uses both imaging and clinical evidence to argue for **[must-not-miss diagnoses](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6775443/)** |
-| **Consultant** | Synthesize final report | [MedGemma](https://huggingface.co/google/medgemma-27b-text-it) 4B/27B | Writes as a **collegial consultant**: *"Have you considered..."* not *"You are wrong."* |
+| **Bias Detector** | Compare doctor vs. AI findings | [MedGemma 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) + [MedSigLIP](https://huggingface.co/google/medsiglip-448) | Uses **zero-shot image classification** to verify radiological signs. Flags clinical red flags ignored by either assessment. |
+| **Devil's Advocate** | Adversarial challenge | [MedGemma 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) | Deliberately contrarian — uses both imaging and clinical evidence to argue for **[must-not-miss diagnoses](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6775443/)** |
+| **Consultant** | Synthesize final report | [MedGemma 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) or [27B Text-IT](https://huggingface.co/google/medgemma-27b-text-it) | Writes as a **collegial consultant**: *"Have you considered..."* not *"You are wrong."* Only this agent optionally upgrades to 27B for deeper reasoning. |
 
 ## Architecture
 
@@ -119,20 +119,13 @@ Three composite clinical scenarios covering the most dangerous diagnostic error 
 | Model | Parameters | Role | Loading |
 |:------|:----------|:-----|:--------|
 | [MedGemma 1.5 4B-IT](https://huggingface.co/google/medgemma-1.5-4b-it) | 4B | Multimodal image+text analysis | 4-bit quantized (~4GB VRAM) or BF16 (~8GB) |
-| [MedGemma 27B Text-IT](https://huggingface.co/google/medgemma-27b-text-it) | 27B | Advanced clinical reasoning | BF16 (~54GB VRAM), A100 only |
+| [MedGemma 27B Text-IT](https://huggingface.co/google/medgemma-27b-text-it) | 27B | Consultant deep reasoning (optional) | BF16 (~54GB VRAM) |
 | [MedSigLIP-448](https://huggingface.co/google/medsiglip-448) | 0.9B | Zero-shot sign verification | FP32 (~3GB VRAM) |
 | [MedASR](https://huggingface.co/google/medasr) | 105M | Medical speech-to-text | FP32 (~0.5GB VRAM) |
 
-### Hardware Profiles
+### Hardware
 
-| Environment | GPU | Configuration | VRAM Usage |
-|:------------|:----|:-------------|:-----------|
-| **Local dev** | RTX 4070 12GB | 4B 4-bit + MedSigLIP + MedASR | ~7.5 GB |
-| **School HPC** | A100 80GB | 4B BF16 + **27B BF16** + MedSigLIP + MedASR | ~66 GB |
-| **HF Space** | T4 16GB | 4B 4-bit + MedSigLIP + MedASR | ~7.5 GB |
-| **Kaggle** | T4 16GB | 4B 4-bit + MedSigLIP | ~7 GB |
-
-All models load locally via [Transformers](https://huggingface.co/docs/transformers) with optional [4-bit quantization](https://huggingface.co/docs/bitsandbytes) — **zero API costs, fully offline-capable**.
+The full pipeline (4B 4-bit + MedSigLIP + MedASR) requires **~8 GB VRAM** and runs on any CUDA GPU with 12GB+ memory. All models load locally via [Transformers](https://huggingface.co/docs/transformers) with [4-bit quantization](https://huggingface.co/docs/bitsandbytes) — **zero API costs, fully offline-capable**.
 
 ### Key Technical Decisions
 
@@ -144,7 +137,7 @@ All models load locally via [Transformers](https://huggingface.co/docs/transform
 
 - **Thinking token stripping**: MedGemma wraps internal reasoning in `<unused94>...<unused95>` tags ([model card](https://huggingface.co/google/medgemma-27b-text-it#thinking-mode)). These are stripped via regex before display.
 
-- **Adaptive model routing**: `generate_text()` automatically routes to 27B when `USE_27B=true`, else falls back to 4B. `generate_with_image()` always uses 4B (only model with vision).
+- **Adaptive model routing**: The first three agents (Diagnostician, Bias Detector, Devil's Advocate) always use 4B-IT for multimodal image+text analysis. Only the Consultant (text-only synthesis) optionally upgrades to 27B when `USE_27B=true` for deeper clinical reasoning. `generate_with_image()` always uses 4B (only model with vision).
 
 - **Collegial tone**: The Consultant is prompted to write as a consulting colleague, not a critic. Research shows physicians respond better to [collaborative challenge than confrontation](https://pubmed.ncbi.nlm.nih.gov/28493811/).
 
@@ -162,7 +155,7 @@ All models load locally via [Transformers](https://huggingface.co/docs/transform
 
 ```bash
 # Clone the repository
-git clone https://huggingface.co/spaces/YOUR_USERNAME/diagnostic-devils-advocate
+git clone https://github.com/sypsyp97/diagnostic-devils-advocate
 cd diagnostic-devils-advocate
 
 # Install dependencies
@@ -191,7 +184,7 @@ The app launches at `http://localhost:7860`.
 
 | Variable | Default | Description |
 |:---------|:--------|:------------|
-| `USE_27B` | `false` | Enable 27B model for text-only agents |
+| `USE_27B` | `false` | Enable 27B model for the Consultant agent |
 | `QUANTIZE_4B` | `true` | 4-bit quantize the 4B model |
 | `ENABLE_MEDASR` | `true` | Enable voice input via MedASR |
 | `HF_TOKEN` | — | Hugging Face token (or use `huggingface-cli login`) |
@@ -211,7 +204,7 @@ diagnostic-devils-advocate/
 │   ├── state.py                  # LangGraph TypedDict state definitions
 │   ├── prompts.py                # All agent prompt templates
 │   ├── graph.py                  # LangGraph StateGraph pipeline
-│   ├── output_parser.py          # JSON parsing with json_repair
+│   ├── output_parser.py          # JSON parsing with json_repair + llm-output-parser
 │   ├── diagnostician.py          # Agent 1: Blinded image + clinical analysis
 │   ├── bias_detector.py          # Agent 2: Bias detection + MedSigLIP
 │   ├── devil_advocate.py         # Agent 3: Adversarial challenge
@@ -228,20 +221,9 @@ diagnostic-devils-advocate/
 │   ├── callbacks.py              # UI event handlers & pipeline integration
 │   └── css.py                    # Custom styling (responsive design)
 │
-├── data/
-│   └── demo_cases/               # 3 composite clinical scenarios
-│       └── SOURCES.md            # Full literature citations
-│
-└── tests/
-    ├── test_smoke.py             # Import & build verification
-    ├── test_output_parser.py     # JSON repair tests
-    └── test_pipeline_mock.py     # Integration tests with mocked models
-```
-
-## Testing
-
-```bash
-python -m pytest tests/ -v
+└── data/
+    └── demo_cases/               # 3 composite clinical scenarios
+        └── SOURCES.md            # Full literature citations
 ```
 
 ## Disclaimer
