@@ -1,11 +1,13 @@
 """
 JSON output parser for LLM responses.
-Uses json_repair to handle malformed JSON (missing commas, truncation, extra text, etc.).
+Uses json_repair for malformed JSON, and llm_output_parser as fallback
+to extract JSON from mixed text/markdown LLM output.
 """
 
 import logging
 from collections.abc import Mapping
 from json_repair import repair_json
+from llm_output_parser import parse_json as extract_json
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,16 @@ def parse_json_response(text: str) -> dict:
     # interpret (via 'items') when schema keys are missing.
     if isinstance(result, list):
         return _coerce_list_root(result)
+
+    # Fallback: json_repair returned a plain string (model output natural language).
+    # Use llm_output_parser to extract JSON from mixed text/markdown.
+    if isinstance(result, str):
+        logger.warning("json_repair returned str, trying llm_output_parser extraction")
+        extracted = extract_json(text, allow_incomplete=True, strict=False)
+        if isinstance(extracted, Mapping):
+            return dict(extracted)
+        if isinstance(extracted, list):
+            return _coerce_list_root(extracted)
 
     raise ValueError(
         f"Could not parse JSON from LLM output (got {type(result).__name__}, length={len(text)})"

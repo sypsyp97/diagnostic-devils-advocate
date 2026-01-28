@@ -4,7 +4,7 @@ Runs MedSigLIP sign verification on imaging findings mentioned by the Diagnostic
 Outputs structured JSON.
 """
 
-import re
+import json
 import logging
 from agents.state import PipelineState
 from agents.prompts import BIAS_DETECTOR_SYSTEM, BIAS_DETECTOR_USER
@@ -13,22 +13,21 @@ from models import medgemma_client, medsiglip_client
 
 logger = logging.getLogger(__name__)
 
-# Common imaging signs that SigLIP can meaningfully evaluate on chest X-ray.
-# These are visual patterns, not abstract diagnoses.
-_KNOWN_SIGNS = [
-    "pleural effusion", "consolidation", "infiltrates", "pneumothorax",
-    "widened mediastinum", "cardiomegaly", "pulmonary edema", "atelectasis",
-    "rib fracture", "subcutaneous emphysema", "hilar enlargement",
-    "hyperinflation", "pleural thickening", "lung opacity", "air bronchogram",
-    "mediastinal shift", "tracheal deviation", "cephalization",
-]
+_SIGN_EXTRACTION_PROMPT = """\
+Extract radiological signs (imaging abnormalities) from the following diagnostic findings.
+Return ONLY a JSON array of short sign names.
+Rules:
+- Only include imaging abnormalities that could be visually verified on a medical image.
+- Do NOT include normal anatomical structures, abstract diagnoses, clinical impressions, or treatment recommendations.
+- Maximum 8 signs. If more exist, keep the most clinically significant ones.
+- Return an empty array [] if no signs are found.
+
+Findings:
+{findings_text}"""
 
 
 def _extract_signs(findings: object) -> list[str]:
-    """Extract imaging signs mentioned in the Diagnostician's findings.
-
-    Matches against known radiological signs rather than parsing diagnoses.
-    """
+    """Extract signs from findings using MedGemma."""
     if isinstance(findings, list):
         chunks: list[str] = []
         for item in findings:
@@ -41,31 +40,20 @@ def _extract_signs(findings: object) -> list[str]:
     else:
         findings_text = str(findings)
 
-    findings_lower = findings_text.lower()
-    found = []
-    for sign in _KNOWN_SIGNS:
-        if sign in findings_lower:
-            found.append(sign)
+    if not findings_text.strip():
+        return []
 
-    # Also extract any explicit "abnormal" findings with simple patterns
-    # e.g., "visible pleural line", "blunted costophrenic angle"
-    extra_patterns = [
-        r'(?:visible|subtle|small|large|bilateral|unilateral|left|right)\s+([\w\s]{5,30}?)(?:\.|,|;|\n)',
-    ]
-    for pat in extra_patterns:
-        for m in re.findall(pat, findings_lower):
-            cleaned = m.strip()
-            if cleaned not in found and len(cleaned) > 5:
-                found.append(cleaned)
+    try:
+        raw = medgemma_client.generate_text(
+            _SIGN_EXTRACTION_PROMPT.format(findings_text=findings_text),
+        )
+        parsed = json.loads(raw.strip().strip("`").removeprefix("json").strip())
+        if isinstance(parsed, list):
+            return [str(s).strip().lower() for s in parsed if isinstance(s, str)][:8]
+    except (json.JSONDecodeError, Exception) as e:
+        logger.warning("LLM sign extraction failed, raw output: %s — %s", raw, e)
 
-    # Deduplicate, limit to 8
-    seen = set()
-    unique = []
-    for s in found:
-        if s not in seen:
-            seen.add(s)
-            unique.append(s)
-    return unique[:8]
+    return []
 
 
 def run(state: PipelineState) -> PipelineState:

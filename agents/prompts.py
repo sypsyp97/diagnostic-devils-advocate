@@ -56,7 +56,7 @@ Compare both assessments objectively. Neither is assumed correct. Respond with J
   "discrepancy_summary": "how the two assessments differ — note which points are uncertain",
   "identified_biases": [
     {{
-      "source": "doctor | AI | both",
+      "source": "choose from HUMAN | AI | BOTH",
       "type": "bias type",
       "evidence": "why you suspect this bias",
       "severity": "choose from LOW | MEDIUM | HIGH"
