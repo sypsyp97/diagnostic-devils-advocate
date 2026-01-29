@@ -1,3 +1,21 @@
+---
+title: Diagnostic Devil's Advocate
+emoji: "🩺"
+colorFrom: red
+colorTo: blue
+sdk: gradio
+sdk_version: "6.4.0"
+app_file: app.py
+pinned: false
+license: cc-by-4.0
+tags:
+  - medgemma
+  - medical-imaging
+  - multi-agent
+  - cognitive-bias
+  - radiology
+---
+
 <div align="center">
 
 # Diagnostic Devil's Advocate
