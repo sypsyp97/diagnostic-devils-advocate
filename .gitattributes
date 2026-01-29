@@ -1,2 +1,1 @@
 README.md merge=keepTheirs
-assets/workflow.jpg filter=lfs diff=lfs merge=lfs -text
