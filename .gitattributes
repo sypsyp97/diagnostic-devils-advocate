@@ -1,1 +1,3 @@
 README.md merge=keepTheirs
+*.jpg filter=xet diff=xet merge=xet -text
+*.png filter=xet diff=xet merge=xet -text
