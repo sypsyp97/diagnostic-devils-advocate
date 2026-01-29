@@ -14,6 +14,7 @@ from config import (
     USE_27B, QUANTIZE_4B, HF_TOKEN, DEVICE,
     MEDGEMMA_4B_MODEL_ID, MEDGEMMA_27B_MODEL_ID,
     MAX_NEW_TOKENS_4B, MAX_NEW_TOKENS_27B, TEMPERATURE, REPETITION_PENALTY,
+    ENABLE_TORCH_COMPILE, ENABLE_SDPA,
 )
 from models.utils import strip_thinking_tokens, resize_for_medgemma, apply_prompt_repetition
 
@@ -68,9 +69,18 @@ def load_4b():
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
         is_local = _is_local_path(MEDGEMMA_4B_MODEL_ID)
+        opts = []
+        if QUANTIZE_4B:
+            opts.append("4-bit")
+        else:
+            opts.append("bf16")
+        if ENABLE_SDPA:
+            opts.append("SDPA")
+        if ENABLE_TORCH_COMPILE:
+            opts.append("compiled")
         logger.info(
             "Loading MedGemma 4B-IT (%s) from %s...",
-            "4-bit" if QUANTIZE_4B else "bf16",
+            "+".join(opts),
             "local" if is_local else "HF Hub",
         )
 
@@ -82,9 +92,19 @@ def load_4b():
         else:
             kwargs["dtype"] = torch.bfloat16
 
+        # SDPA: 优化注意力计算
+        if ENABLE_SDPA:
+            kwargs["attn_implementation"] = "sdpa"
+
         _processor_4b = AutoProcessor.from_pretrained(MEDGEMMA_4B_MODEL_ID, **_token_arg(MEDGEMMA_4B_MODEL_ID))
         _model_4b = AutoModelForImageTextToText.from_pretrained(MEDGEMMA_4B_MODEL_ID, **kwargs)
         _model_4b.eval()
+
+        # torch.compile: JIT 编译加速（首次推理会编译，耐心等待）
+        if ENABLE_TORCH_COMPILE:
+            logger.info("Compiling model with torch.compile (first inference will be slow)...")
+            _model_4b = torch.compile(_model_4b, mode="reduce-overhead")
+
         logger.info("MedGemma 4B loaded.")
         return _model_4b, _processor_4b
 
@@ -103,19 +123,33 @@ def load_27b():
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
         is_local = _is_local_path(MEDGEMMA_27B_MODEL_ID)
+        opts = ["bf16"]
+        if ENABLE_SDPA:
+            opts.append("SDPA")
+        if ENABLE_TORCH_COMPILE:
+            opts.append("compiled")
         logger.info(
-            "Loading MedGemma 27B Text-IT (bf16) from %s...",
+            "Loading MedGemma 27B Text-IT (%s) from %s...",
+            "+".join(opts),
             "local" if is_local else "HF Hub",
         )
 
-        _tokenizer_27b = AutoTokenizer.from_pretrained(MEDGEMMA_27B_MODEL_ID, **_token_arg(MEDGEMMA_27B_MODEL_ID))
-        _model_27b = AutoModelForCausalLM.from_pretrained(
-            MEDGEMMA_27B_MODEL_ID,
+        kwargs = {
             **_token_arg(MEDGEMMA_27B_MODEL_ID),
-            dtype=torch.bfloat16,
-            device_map="auto",
-        )
+            "torch_dtype": torch.bfloat16,
+            "device_map": "auto",
+        }
+        if ENABLE_SDPA:
+            kwargs["attn_implementation"] = "sdpa"
+
+        _tokenizer_27b = AutoTokenizer.from_pretrained(MEDGEMMA_27B_MODEL_ID, **_token_arg(MEDGEMMA_27B_MODEL_ID))
+        _model_27b = AutoModelForCausalLM.from_pretrained(MEDGEMMA_27B_MODEL_ID, **kwargs)
         _model_27b.eval()
+
+        if ENABLE_TORCH_COMPILE:
+            logger.info("Compiling model with torch.compile (first inference will be slow)...")
+            _model_27b = torch.compile(_model_27b, mode="reduce-overhead")
+
         logger.info("MedGemma 27B loaded.")
         return _model_27b, _tokenizer_27b
 

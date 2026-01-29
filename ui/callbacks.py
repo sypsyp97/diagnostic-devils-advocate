@@ -104,7 +104,7 @@ DEMO_CASES = {
 }
 
 
-@gpu_decorator(duration=600)
+@gpu_decorator(duration=900)
 def analyze_streaming(image: Image.Image | None, diagnosis: str, context: str, modality: str):
     """
     Generator: run pipeline and yield single HTML output after each agent step.

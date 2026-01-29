@@ -16,6 +16,13 @@ USE_27B = os.environ.get("USE_27B", "false").lower() == "true"
 QUANTIZE_4B = os.environ.get("QUANTIZE_4B", "true").lower() == "true"
 ENABLE_MEDASR = os.environ.get("ENABLE_MEDASR", "true").lower() == "true"
 
+# --- Performance Optimization ---
+# torch.compile: JIT 编译加速，首次推理慢（编译），后续快 30-80%
+# 默认关闭：ZeroGPU 冷启动每次都要重新编译，不划算
+ENABLE_TORCH_COMPILE = os.environ.get("ENABLE_TORCH_COMPILE", "false").lower() == "true"
+# SDPA: 优化注意力计算，省显存 + 加速（无编译开销）
+ENABLE_SDPA = os.environ.get("ENABLE_SDPA", "true").lower() == "true"
+
 # --- Prompt Repetition (arXiv:2512.14982) ---
 # Repeating the user prompt improves non-reasoning LLM performance (47 wins, 0 losses
 # across 70 benchmark-model combos). Only increases prefill tokens, no extra generation.
